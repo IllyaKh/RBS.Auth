@@ -3,7 +3,7 @@ name: Continious Integration and Deployment for RBS.Auth
 on:
   push:
     branches:
-      - *
+      - '*'
   pull_requests:
     branches:
       - main
