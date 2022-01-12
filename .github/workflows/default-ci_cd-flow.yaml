@@ -11,6 +11,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      build_result: ${{ steps.dotnet_build_app.* }}
     steps:
       - name: Checkout code 💩
         uses: actions/checkout@v2
@@ -37,6 +39,7 @@ jobs:
           token: ${{ secrets.TELEGRAM_TOKEN }}
           message: |
             The ${{ github.event_name }} event triggered final step.
+            Result ${{ needs.build.outputs.build_result }}
             
 
 
