@@ -28,8 +28,8 @@ jobs:
       - name: Build an application 🚀
         id: dotnet_build_app
         run: | 
-        RESULT_BUILD = dotnet build RBS.Auth.WebApi -c Release --no-restore
-        echo "::set-output name=build_result::$"{RESULT_BUILD}""
+        dotnet build RBS.Auth.WebApi -c Release --no-restore
+        echo ::set-output name=build_result::$?
     
   notifyTelegram:
     needs: build
