@@ -27,9 +27,7 @@ jobs:
       
       - name: Build an application 🚀
         id: dotnet_build_app
-        run: | 
-        dotnet build RBS.Auth.WebApi -c Release --no-restore
-        echo ::set-output name=build_result::$?
+        run: dotnet build RBS.Auth.WebApi -c Release --no-restore
     
   notifyTelegram:
     needs: build
@@ -41,8 +39,12 @@ jobs:
           to: ${{ secrets.TELEGRAM_TO }}
           token: ${{ secrets.TELEGRAM_TOKEN }}
           message: |
-            The ${{ github.event_name }} event triggered final step.
-            Result ${{ needs.build.outputs.build_result }}
+            ${{ github.actor }} created commit:
+            Commit message: ${{ github.event.commits[0].message }}
+            
+            Repository: ${{ github.repository }}
+            
+            See changes: https://github.com/${{ github.repository }}/commit/${{github.sha}}
             
 
 
