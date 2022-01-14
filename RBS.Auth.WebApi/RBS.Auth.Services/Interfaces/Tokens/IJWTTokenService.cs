@@ -1,10 +1,9 @@
 ﻿using RBS.Auth.Common;
-using RBS.Auth.Common.Models;
+using RBS.Auth.Db.Domain;
 
-namespace RBS.Auth.Services.Interfaces.Tokens
+namespace RBS.Auth.Services.Interfaces.Tokens;
+
+public interface IJwtTokenService
 {
-    public interface IJWTTokenService
-    {
-        string Generate(AuthOptions authOptions, Account user);
-    }
+    string Generate(AuthOptions authOptions, UserCredential user);
 }

@@ -1,84 +1,85 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
 using RBS.Auth.Common;
+using RBS.Auth.Db;
 using RBS.Auth.Services.Authenticate;
+using RBS.Auth.Services.Hashing;
 using RBS.Auth.Services.Interfaces.Authenticate;
+using RBS.Auth.Services.Interfaces.Hashing;
 using RBS.Auth.Services.Interfaces.Tokens;
 using RBS.Auth.Services.Tokens;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
-namespace RBS.Auth.WebApi
+namespace RBS.Auth.WebApi;
+
+public class Startup
 {
-    public class Startup
+    public Startup(IConfiguration configuration, IWebHostEnvironment env)
     {
-        public Startup(IConfiguration configuration, IWebHostEnvironment env)
-        {
-            Configuration = configuration;
-            Environment = env;
-        }
+        var builder = new ConfigurationBuilder()
+            .SetBasePath(env.ContentRootPath)
+            .AddJsonFile("appsettings.json", false, true)
+            .AddJsonFile($"appsettings.{env.EnvironmentName}.json", true, true)
+            .AddEnvironmentVariables();
 
-        public IConfiguration Configuration { get; }
-        public IWebHostEnvironment Environment { get; }
+        Configuration = builder.Build();
+        Environment = env;
+    }
 
-        // This method gets called by the runtime. Use this method to add services to the container.
-        public void ConfigureServices(IServiceCollection services)
-        {
-            ConfigureInternalServices(services);
+    public IConfiguration Configuration { get; }
+    public IWebHostEnvironment Environment { get; }
 
-            services.AddControllers();
+    // This method gets called by the runtime. Use this method to add services to the container.
+    public void ConfigureServices(IServiceCollection services)
+    {
+        services.ConfigureDatabase(Configuration);
 
-            services.Configure<AuthOptions>(Configuration.GetSection("Auth"));
+        services.AddAutoMapper(typeof(Startup));
 
-            if (!Environment.IsProduction())
+        ConfigureInternalServices(services);
+
+        services.AddControllers();
+
+        services.Configure<AuthOptions>(Configuration.GetSection("Auth"));
+
+        if (!Environment.IsProduction())
+            services.AddSwaggerGen(options =>
             {
-                services.AddSwaggerGen(options =>
-                {
-                    options.SwaggerDoc("v1", new OpenApiInfo { Title = "RBS.Auth.WebApi", Version = "v1" });
-                });
-            }
-        }
-
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
-        {
-            if (env.IsDevelopment())
-            {
-                app.UseSwagger();
-                app.UseSwaggerUI(opt =>
-                {
-                    opt.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
-                    opt.RoutePrefix = string.Empty;
-                });
-                app.UseDeveloperExceptionPage();
-            }
-
-
-            app.UseHttpsRedirection();
-
-            app.UseRouting();
-
-            app.UseAuthorization();
-
-            app.UseEndpoints(endpoints =>
-            {
-                endpoints.MapControllers();
+                options.SwaggerDoc("v1", new OpenApiInfo {Title = "RBS.Auth.WebApi", Version = "v1"});
             });
-        }
-    
-        private void ConfigureInternalServices(IServiceCollection services)
+    }
+
+    // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
+    public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+    {
+        if (env.IsDevelopment())
         {
-            services.AddScoped<IJWTTokenService, JWTTokenService>();
-            services.AddScoped<IAuthenticateService, AuthenticateService>();
+            app.UseSwagger();
+            app.UseSwaggerUI(opt =>
+            {
+                opt.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
+                opt.RoutePrefix = string.Empty;
+            });
+            app.UseDeveloperExceptionPage();
         }
+
+
+        app.UseHttpsRedirection();
+
+        app.UseRouting();
+
+        app.UseAuthorization();
+
+        app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
+    }
+
+    private void ConfigureInternalServices(IServiceCollection services)
+    {
+        services.AddScoped<IJwtTokenService, JwtTokenService>();
+        services.AddScoped<IAuthenticateService, AuthenticateService>();
+        services.AddScoped<IHashingService, HashingService>();
     }
 }

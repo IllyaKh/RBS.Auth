@@ -1,46 +1,62 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Threading.Tasks;
+using AutoMapper;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using RBS.Auth.Common;
+using RBS.Auth.Common.Models;
 using RBS.Auth.Services.Interfaces.Authenticate;
 using RBS.Auth.Services.Interfaces.Tokens;
 using RBS.Auth.WebApi.Models;
 
-namespace RBS.Auth.WebApi.Controllers
+namespace RBS.Auth.WebApi.Controllers;
+
+[Route("api/auth")]
+[ApiController]
+public class AuthController : ControllerBase
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class AuthController : ControllerBase
+    private readonly IAuthenticateService _authenticateService;
+    private readonly IOptions<AuthOptions> _authOptions;
+    private readonly IJwtTokenService _jwtTokenService;
+    private readonly IMapper _mapper;
+
+    public AuthController(IOptions<AuthOptions> authOptions,
+        IJwtTokenService jwtTokenService,
+        IAuthenticateService authenticateService,
+        IMapper mapper)
     {
-        private readonly IOptions<AuthOptions> _authOptions;
-        private readonly IJWTTokenService _jwtTokenService;
-        private readonly IAuthenticateService _authenticateService;
+        _authOptions = authOptions;
+        _jwtTokenService = jwtTokenService;
+        _authenticateService = authenticateService;
+        _mapper = mapper;
+    }
 
-        public AuthController(IOptions<AuthOptions> authOptions,
-            IJWTTokenService jwtTokenService,
-            IAuthenticateService authenticateService)
+    [Route("login")]
+    [HttpPost]
+    public IActionResult Login(LoginRequest request)
+    {
+        var user = _authenticateService.Authenticate(request.Email, request.Password);
+
+        if (user != null)
         {
-            _authOptions = authOptions;
-            _jwtTokenService = jwtTokenService;
-            _authenticateService = authenticateService;
-        }
+            var token = _jwtTokenService.Generate(_authOptions.Value, user);
 
-        [Route("login")]
-        [HttpPost]
-        public IActionResult Login(LoginModel request)
-        {
-            var user = _authenticateService.Authenticate(request.Email, request.Password);
-
-            if (user != null)
+            return Ok(new
             {
-                var token = _jwtTokenService.Generate(_authOptions.Value, user);
-
-                return Ok(new
-                {
-                    access_token = token
-                });
-            }
-
-            return Unauthorized();
+                access_token = token
+            });
         }
+
+        return Unauthorized();
+    }
+
+    [Route("register")]
+    [HttpPut]
+    public async Task<IActionResult> Register(RegisterRequest request)
+    {
+        var registerModel = _mapper.Map<RegisterModel>(request);
+
+        if (await _authenticateService.Register(registerModel)) return Ok();
+
+        return StatusCode(500);
     }
 }
