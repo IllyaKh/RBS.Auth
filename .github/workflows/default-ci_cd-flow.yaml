@@ -30,7 +30,7 @@ jobs:
         run: dotnet build RBS.Auth.WebApi -c Release --no-restore
 
       - name: Test with the dotnet CLI 🧻
-        run: dotnet test
+        run: dotnet test RBS.Auth.WebApi
     
   notifyTelegram:
     needs: build
