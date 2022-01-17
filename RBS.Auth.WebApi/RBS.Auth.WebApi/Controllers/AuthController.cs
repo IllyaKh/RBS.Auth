@@ -10,7 +10,7 @@ using RBS.Auth.WebApi.Models;
 
 namespace RBS.Auth.WebApi.Controllers;
 
-[Route("api/auth")]
+[Route("api/[controller]")]
 [ApiController]
 public class AuthController : ControllerBase
 {
@@ -34,28 +34,33 @@ public class AuthController : ControllerBase
     [HttpPost]
     public IActionResult Login(LoginRequest request)
     {
+        if (!ModelState.IsValid) 
+            return StatusCode(403);
+
         var user = _authenticateService.Authenticate(request.Email, request.Password);
 
-        if (user != null)
-        {
-            var token = _jwtTokenService.Generate(_authOptions.Value, user);
+        if (user == null)
+            return Unauthorized();
 
-            return Ok(new
-            {
-                access_token = token
-            });
-        }
+        var token = _jwtTokenService.Generate(_authOptions.Value, user);
 
-        return Unauthorized();
+        return string.IsNullOrEmpty(token) ? 
+            StatusCode(500) : 
+            Ok(new { access_token = token });
+
     }
 
     [Route("register")]
     [HttpPut]
     public async Task<IActionResult> Register(RegisterRequest request)
     {
+        if (!ModelState.IsValid)
+            return StatusCode(403);
+
         var registerModel = _mapper.Map<RegisterModel>(request);
 
-        if (await _authenticateService.Register(registerModel)) return Ok();
+        if (await _authenticateService.Register(registerModel)) 
+            return Ok();
 
         return StatusCode(500);
     }

@@ -1,3 +1,4 @@
+using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -41,7 +42,8 @@ public class Startup
 
         ConfigureInternalServices(services);
 
-        services.AddControllers();
+        services.AddControllers().AddFluentValidation(fv => 
+            fv.RegisterValidatorsFromAssemblyContaining<Startup>());
 
         services.Configure<AuthOptions>(Configuration.GetSection("Auth"));
 

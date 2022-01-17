@@ -44,7 +44,7 @@ public class AuthenticateService : IAuthenticateService
         }
         catch (Exception ex)
         {
-            _logger.LogError($"An error ocurred when login user: {email}", ex);
+            _logger.LogError($"An error occurred when login user: {email}", ex);
 
             return null;
         }
