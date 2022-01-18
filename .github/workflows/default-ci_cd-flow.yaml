@@ -50,6 +50,7 @@ jobs:
             See changes: https://github.com/${{ github.repository }}/commit/${{github.sha}}
   
   herokuPush:
+    needs: build
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v1
