@@ -10,7 +10,7 @@ using RBS.Auth.WebApi.Models;
 
 namespace RBS.Auth.WebApi.Controllers;
 
-[Route("api/[controller]")]
+[Route("api/[controller]/[action]")]
 [ApiController]
 public class AuthController : ControllerBase
 {
@@ -30,14 +30,13 @@ public class AuthController : ControllerBase
         _mapper = mapper;
     }
 
-    [Route("login")]
     [HttpPost]
-    public IActionResult Login(LoginRequest request)
+    public async Task<IActionResult> Login(LoginRequest request)
     {
         if (!ModelState.IsValid) 
             return StatusCode(403);
 
-        var user = _authenticateService.Authenticate(request.Email, request.Password);
+        var user = await _authenticateService.Authenticate(request.Email, request.Password);
 
         if (user == null)
             return Unauthorized();
@@ -50,7 +49,6 @@ public class AuthController : ControllerBase
 
     }
 
-    [Route("register")]
     [HttpPut]
     public async Task<IActionResult> Register(RegisterRequest request)
     {

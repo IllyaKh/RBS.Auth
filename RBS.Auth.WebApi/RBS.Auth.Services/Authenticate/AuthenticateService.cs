@@ -28,13 +28,13 @@ public class AuthenticateService : IAuthenticateService
         _logger = logger;
     }
 
-    public UserCredential Authenticate(string email, string password)
+    public async Task<UserCredential> Authenticate(string email, string password)
     {
         try
         {
-            var user = _db.UserCredentials
+            var user = await _db.UserCredentials
                 .Include(det => det.Details)
-                .SingleOrDefault(d => d.Details.Email == email);
+                .SingleOrDefaultAsync(d => d.Details.Email == email);
 
             if (user != null)
                 if (_hashingService.Check(user.Hash, user.Salt, password))

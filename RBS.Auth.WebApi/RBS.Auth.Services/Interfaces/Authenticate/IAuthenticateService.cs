@@ -6,7 +6,7 @@ namespace RBS.Auth.Services.Interfaces.Authenticate;
 
 public interface IAuthenticateService
 {
-    UserCredential Authenticate(string email, string password);
+    Task<UserCredential> Authenticate(string email, string password);
 
     Task<bool> Register(RegisterModel model);
 }

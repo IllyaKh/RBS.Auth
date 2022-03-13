@@ -26,10 +26,11 @@ public class RegisterRequestValidator : AbstractValidator<RegisterRequest>
             .Must(PasswordRules.HasNumber)
             .WithMessage("Password should at least one number.");
 
+        /*
         RuleFor(r => r.Password)
             .Must(PasswordRules.HasSpecialSymbols)
             .WithMessage("Password should at least one special symbol.");
-
+        */
         RuleFor(r => r.Password)
             .Must(PasswordRules.PasswordHasUppercase)
             .WithMessage("Password should contain at least one uppercase character.");

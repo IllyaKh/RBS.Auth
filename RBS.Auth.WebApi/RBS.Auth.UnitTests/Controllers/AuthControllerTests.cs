@@ -40,7 +40,7 @@ public class AuthControllerTests
     }
 
     [Test]
-    public void Login_RequestModelIsValid_ShouldReturn200StatusCode()
+    public async Task Login_RequestModelIsValid_ShouldReturn200StatusCode()
     {
         // Arrange
         var loginRequest = new LoginRequest()
@@ -53,7 +53,7 @@ public class AuthControllerTests
 
         _authenticateServiceMock
             .Setup(t => t.Authenticate(It.IsAny<string>(), It.IsAny<string>()))
-            .Returns(new UserCredential());
+            .Returns(Task.FromResult(new UserCredential()));
 
         _tokenServiceMock
             .Setup(t => t.Generate(It.IsAny<AuthOptions>(), It.IsAny<UserCredential>()))
@@ -65,7 +65,7 @@ public class AuthControllerTests
             MapperExtensions.Mapper);
 
         // Act
-        var response = controller.Login(loginRequest);
+        var response = await controller.Login(loginRequest);
 
         // Assert
         response.Should().NotBeNull();
@@ -75,7 +75,7 @@ public class AuthControllerTests
     }
 
     [Test]
-    public void Login_RequestModelIsValidUserNotFound_ShouldReturn401StatusCode()
+    public async Task Login_RequestModelIsValidUserNotFound_ShouldReturn401StatusCode()
     {
         // Arrange
         var loginRequest = new LoginRequest()
@@ -88,7 +88,7 @@ public class AuthControllerTests
 
         _authenticateServiceMock
             .Setup(t => t.Authenticate(It.IsAny<string>(), It.IsAny<string>()))
-            .Returns((UserCredential)null);
+            .Returns(Task.FromResult((UserCredential)null));
 
         var controller = new AuthController(_options,
             _tokenServiceMock.Object,
@@ -96,7 +96,7 @@ public class AuthControllerTests
             MapperExtensions.Mapper);
 
         // Act
-        var response = controller.Login(loginRequest);
+        var response = await controller.Login(loginRequest);
 
         // Assert
         response.Should().NotBeNull();

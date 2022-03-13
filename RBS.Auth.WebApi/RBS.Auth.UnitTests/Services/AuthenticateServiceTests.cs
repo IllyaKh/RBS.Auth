@@ -39,55 +39,55 @@ public class AuthenticateServiceTests
     }
 
     [Test]
-    public void Authenticate_UserNotFound_ShouldReturnNull()
+    public async Task Authenticate_UserNotFound_ShouldReturnNull()
     {
         // Arrange
         _hashingServiceMock.Setup(x => 
                 x.Check(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
             .Returns(true);
 
-        using var context = new AuthContext(_dbOptions);
+        await using var context = new AuthContext(_dbOptions);
 
         var authService = new AuthenticateService(context, _hashingServiceMock.Object, _loggerMock.Object);
 
         // Act 
-        var user = authService.Authenticate("12","12");
+        var user = await authService.Authenticate("12","12");
             
         // Assert
         user.Should().BeNull();
     }
 
     [Test]
-    public void Authenticate_UserExists_ShouldReturnUser()
+    public async Task Authenticate_UserExists_ShouldReturnUser()
     {
         // Arrange
         _hashingServiceMock.Setup(x =>
                 x.Check(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
             .Returns(true);
 
-        using var context = new AuthContext(_dbOptions);
+        await using var context = new AuthContext(_dbOptions);
 
         var userDetails = new UserDetails() {Email = userEmail};
         context.Details.Add(userDetails);
         context.UserCredentials.Add(new UserCredential() { Details = userDetails });
 
-        context.SaveChanges();
+        await context.SaveChangesAsync();
 
         var authService = new AuthenticateService(context, _hashingServiceMock.Object, _loggerMock.Object);
 
         // Act 
-        var user = authService.Authenticate(userEmail, userPassword);
+        var user = await authService.Authenticate(userEmail, userPassword);
 
         // Assert
         user.Should().NotBeNull();
         user.Details.Email.Should().Be(userEmail);
 
-        context.Dispose();
+        await context.DisposeAsync();
     }
 
 
     [Test]
-    public void Authenticate_HashingServiceThrowsException_ShouldLogExceptionWithMessage()
+    public async Task Authenticate_HashingServiceThrowsException_ShouldLogExceptionWithMessage()
     {
         // Arrange
         var exception = new Exception("");
@@ -96,7 +96,7 @@ public class AuthenticateServiceTests
                 x.Check(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
             .Throws(exception);
 
-        using var context = new AuthContext(_dbOptions);
+        await using var context = new AuthContext(_dbOptions);
 
         var authService = new AuthenticateService(context, _hashingServiceMock.Object, _loggerMock.Object);
 
@@ -104,21 +104,21 @@ public class AuthenticateServiceTests
         context.Details.Add(userDetails);
         context.UserCredentials.Add(new UserCredential() { Details = userDetails });
 
-        context.SaveChanges();
+        await context.SaveChangesAsync();
 
         // Act 
-        authService.Authenticate(userEmail, userPassword);
+        await authService.Authenticate(userEmail, userPassword);
 
         // Assert
 
         _loggerMock.Verify(LoggerExtensions<AuthenticateService>
             .VerifyLogging($"An error occurred when login user: {userEmail}", LogLevel.Error), Times.Once);
 
-        context.Dispose();
+        await context.DisposeAsync();
     }
 
     [Test]
-    public void Authenticate_HashingServiceThrowsException_ShouldReturnNull()
+    public async Task Authenticate_HashingServiceThrowsException_ShouldReturnNull()
     {
         // Arrange
         var exception = new Exception("");
@@ -127,7 +127,7 @@ public class AuthenticateServiceTests
                 x.Check(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
             .Throws(exception);
 
-        using var context = new AuthContext(_dbOptions);
+        await using var context = new AuthContext(_dbOptions);
 
         var authService = new AuthenticateService(context, _hashingServiceMock.Object, _loggerMock.Object);
 
@@ -135,15 +135,15 @@ public class AuthenticateServiceTests
         context.Details.Add(userDetails);
         context.UserCredentials.Add(new UserCredential() { Details = userDetails });
 
-        context.SaveChanges();
+        await context.SaveChangesAsync();
 
         // Act 
-        var user = authService.Authenticate(userEmail, userPassword);
+        var user = await authService.Authenticate(userEmail, userPassword);
 
         // Assert
         user.Should().BeNull();
 
-        context.Dispose();
+        await context.DisposeAsync();
     }
 
     [Test]
