@@ -1,39 +1,35 @@
-﻿using Microsoft.IdentityModel.Tokens;
-using RBS.Auth.Common;
-using RBS.Auth.Common.Models;
-using RBS.Auth.Services.Interfaces.Tokens;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
 using System.Security.Claims;
+using Microsoft.IdentityModel.Tokens;
+using RBS.Auth.Common;
+using RBS.Auth.Db.Domain;
+using RBS.Auth.Services.Interfaces.Tokens;
 
-namespace RBS.Auth.Services.Tokens
+namespace RBS.Auth.Services.Tokens;
+
+public class JwtTokenService : IJwtTokenService
 {
-    public class JWTTokenService : IJWTTokenService
+    public string Generate(AuthOptions authOptions, UserCredential user)
     {
-        public string Generate(AuthOptions authOptions, Account user)
+        var securityKey = authOptions.GetSymmetricSecurityKey();
+        var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
+
+        var claims = new List<Claim>
         {
-            var securityKey = authOptions.GetSymmetricSecurityKey();
-            var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
+            new(JwtRegisteredClaimNames.Email, user.Details.Email),
+            new(JwtRegisteredClaimNames.Sub, user.Id.ToString())
+        };
 
-            var claims = new List<Claim>()
-            {
-                new Claim(JwtRegisteredClaimNames.Email, user.Email),
-                new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString())
-            };
+        var tokenLifetime = DateTime.Now.AddSeconds(authOptions.TokenLifetime);
 
-            claims.AddRange(user.Roles.Select(r => new Claim("role", r.ToString())));
+        var token = new JwtSecurityToken(authOptions.Issuer,
+            authOptions.Audience,
+            claims,
+            expires: tokenLifetime,
+            signingCredentials: credentials);
 
-            var tokenLifetime = DateTime.Now.AddSeconds(authOptions.TokenLifetime);
-
-            var token = new JwtSecurityToken(authOptions.Issuer,
-                authOptions.Audience,
-                claims,
-                expires: tokenLifetime,
-                signingCredentials: credentials);
-
-            return new JwtSecurityTokenHandler().WriteToken(token);
-        }
+        return new JwtSecurityTokenHandler().WriteToken(token);
     }
 }

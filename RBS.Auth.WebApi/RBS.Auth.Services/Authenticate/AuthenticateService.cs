@@ -1,28 +1,105 @@
-﻿using RBS.Auth.Common.Enums;
-using RBS.Auth.Common.Models;
-using RBS.Auth.Services.Interfaces.Authenticate;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using RBS.Auth.Common.Models;
+using RBS.Auth.Db;
+using RBS.Auth.Db.Domain;
+using RBS.Auth.Db.Domain.Enums;
+using RBS.Auth.Services.Interfaces.Authenticate;
+using RBS.Auth.Services.Interfaces.Hashing;
 
-namespace RBS.Auth.Services.Authenticate
+namespace RBS.Auth.Services.Authenticate;
+
+public class AuthenticateService : IAuthenticateService
 {
-    public class AuthenticateService : IAuthenticateService
+    private readonly AuthContext _db;
+    private readonly IHashingService _hashingService;
+    private readonly ILogger<AuthenticateService> _logger;
+
+    public AuthenticateService(AuthContext db,
+        IHashingService hashingService,
+        ILogger<AuthenticateService> logger)
     {
-        private readonly List<Account> _accs = new List<Account>()
+        _db = db;
+        _hashingService = hashingService;
+        _logger = logger;
+    }
+
+    public async Task<UserCredential> Authenticate(string email, string password)
+    {
+        try
         {
-            new Account()
+            var user = await _db.UserCredentials
+                .Include(det => det.Details)
+                .SingleOrDefaultAsync(d => d.Details.Email == email);
+
+            if (user != null)
+                if (_hashingService.Check(user.Hash, user.Salt, password))
+                    return user;
+
+            return null;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError($"An error occurred when login user: {email}", ex);
+
+            return null;
+        }
+    }
+
+    public async Task<bool> Register(RegisterModel model)
+    {
+        try
+        {
+            var authUser = GetUserModel(model);
+
+            await _db.AddAsync(authUser);
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError($"An error occurred when register user: {model.Email}", ex);
+            return false;
+        }
+        finally
+        {
+            await _db.SaveChangesAsync();
+        }
+    }
+
+    private UserCredential GetUserModel(RegisterModel model)
+    {
+        var userDetails = new UserDetails
+        {
+            FirstName = model.FirstName,
+            LastName = model.LastName,
+            Email = model.Email
+        };
+
+        var hashes = _hashingService.Hash(model.Password);
+
+        var claims = new List<UserClaim>
+        {
+            new()
             {
-                Id = Guid.Parse("2b18f575-784c-4ad7-ae33-abb73ab8e7b6"),
-                Email = "illia.khomenko@nure.ua",
-                Password = "admin",
-                Roles = new Role[] { Role.Admin }
+                Role = RoleClaim.Admin,
+                Name = "full-access"
             }
         };
 
-        public Account Authenticate(string email, string password)
+        var user = new UserCredential
         {
-            return _accs.SingleOrDefault(u => u.Email == email && u.Password == password);
-        }
+            Id = Guid.NewGuid(),
+            Hash = hashes.key,
+            Salt = hashes.salt,
+            Details = userDetails,
+            Claims = claims
+        };
+
+        return user;
     }
 }

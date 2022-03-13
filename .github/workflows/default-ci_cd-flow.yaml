@@ -3,7 +3,8 @@ name: Continious Integration and Deployment for RBS.Auth
 on:
   push:
     branches:
-      - '*'
+      - main
+      - develop
   pull_request:
     branches:
       - main
@@ -28,12 +29,15 @@ jobs:
       - name: Build an application 🚀
         id: dotnet_build_app
         run: dotnet build RBS.Auth.WebApi -c Release --no-restore
+
+      - name: Test with the dotnet CLI 🧻
+        run: dotnet test RBS.Auth.WebApi
     
   notifyTelegram:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - name: send custom message
+      - name: Send build result to Telegram 📫
         uses: appleboy/telegram-action@master
         with:
           to: ${{ secrets.TELEGRAM_TO }}
@@ -45,6 +49,25 @@ jobs:
             Repository: ${{ github.repository }}
             
             See changes: https://github.com/${{ github.repository }}/commit/${{github.sha}}
+
+# Will be added in next iterations.
+#  herokuPush:
+#    needs: build
+#    runs-on: ubuntu-latest
+#    steps:
+#    - uses: actions/checkout@v1
+#    - name: Login to Heroku Container registry
+#      env: 
+#        HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+#      run: heroku container:login 
+#    - name: Build and push
+#      env:
+#        HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+#      run: heroku container:push -a ${{ secrets.HEROKU_APP_NAME }} web 
+#    - name: Release
+#      env:
+#        HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+#      run: heroku container:release -a ${{ secrets.HEROKU_APP_NAME }} web 
             
 
 
