@@ -15,6 +15,10 @@ jobs:
     outputs:
       build_result: ${{ steps.dotnet_build_app.RESULT_BUILD }}
     steps:
+      - uses: actions/checkout@v2
+      - name: Replace application secrets 🔑
+        uses: jacobtomlinson/gha-find-replace@v2
+
       - name: Checkout code 💩
         uses: actions/checkout@v2
         
@@ -43,31 +47,28 @@ jobs:
           to: ${{ secrets.TELEGRAM_TO }}
           token: ${{ secrets.TELEGRAM_TOKEN }}
           message: |
-            ${{ github.actor }} created commit:
-            Commit message: ${{ github.event.commits[0].message }}
+            ${{ github.actor }} pushed ${{ github.head_ref }} to production:
             
             Repository: ${{ github.repository }}
             
             See changes: https://github.com/${{ github.repository }}/commit/${{github.sha}}
-
-# Will be added in next iterations.
-#  herokuPush:
-#    needs: build
-#    runs-on: ubuntu-latest
-#    steps:
-#    - uses: actions/checkout@v1
-#    - name: Login to Heroku Container registry
-#      env: 
-#        HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
-#      run: heroku container:login 
-#    - name: Build and push
-#      env:
-#        HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
-#      run: heroku container:push -a ${{ secrets.HEROKU_APP_NAME }} web 
-#    - name: Release
-#      env:
-#        HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
-#      run: heroku container:release -a ${{ secrets.HEROKU_APP_NAME }} web 
+  herokuPush:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - name: Login to Heroku Container registry
+      env: 
+        HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+      run: heroku container:login 
+    - name: Build and push
+      env:
+        HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+      run: heroku container:push -a ${{ secrets.HEROKU_APP_NAME }} web 
+    - name: Release
+      env:
+        HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+      run: heroku container:release -a ${{ secrets.HEROKU_APP_NAME }} web 
             
 
 

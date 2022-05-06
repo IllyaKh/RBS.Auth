@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -11,6 +12,16 @@ public static class DatabaseConfigExtension
         services.AddDbContext<AuthContext>(opt =>
             opt.UseSqlServer(configuration.GetConnectionString("AuthDb")));
 
+        
         return services;
+    }
+
+    public static void MigrateDatabase(this IServiceProvider provider)
+    {
+        using var scope = provider.CreateScope();
+
+        var authContext = scope.ServiceProvider.GetRequiredService<AuthContext>();
+
+        authContext.Database.Migrate();
     }
 }
