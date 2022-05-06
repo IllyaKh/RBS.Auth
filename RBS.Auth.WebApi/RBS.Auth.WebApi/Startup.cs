@@ -1,8 +1,8 @@
 using System;
+using System.IO;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -22,10 +22,12 @@ public class Startup
 {
     public Startup(IConfiguration configuration, IWebHostEnvironment env)
     {
+        var bytes = Convert.FromBase64String(System.Environment.GetEnvironmentVariable("AppSettings"));
+
         var builder = new ConfigurationBuilder()
             .SetBasePath(env.ContentRootPath)
             .AddJsonFile("appsettings.json", false, true)
-            .AddJsonFile($"appsettings.{env.EnvironmentName}.json", true, true)
+            .AddJsonStream(new MemoryStream(bytes))
             .AddEnvironmentVariables();
 
         Configuration = builder.Build();
