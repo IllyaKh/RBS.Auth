@@ -15,10 +15,6 @@ jobs:
     outputs:
       build_result: ${{ steps.dotnet_build_app.RESULT_BUILD }}
     steps:
-      - uses: actions/checkout@v2
-      - name: Replace application secrets 🔑
-        uses: jacobtomlinson/gha-find-replace@v2
-
       - name: Checkout code 💩
         uses: actions/checkout@v2
         
