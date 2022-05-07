@@ -1,0 +1,23 @@
+name: CI RBS.Auth on pull request
+
+on:
+  pull_request:
+    types: [created]
+    branches:
+      - main
+      - develop
+    
+jobs:
+  notifyTelegram:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send build result to Telegram 📫
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_TO }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          message: |
+            ${{ github.actor }} created pull request ${{ github.head_ref }}:
+            
+            Repository: ${{ github.repository }}
