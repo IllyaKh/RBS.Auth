@@ -1,3 +1,5 @@
+using System;
+using System.IO;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -20,10 +22,12 @@ public class Startup
 {
     public Startup(IConfiguration configuration, IWebHostEnvironment env)
     {
+        var bytes = Convert.FromBase64String(System.Environment.GetEnvironmentVariable("AppSettings"));
+
         var builder = new ConfigurationBuilder()
             .SetBasePath(env.ContentRootPath)
             .AddJsonFile("appsettings.json", false, true)
-            .AddJsonFile($"appsettings.{env.EnvironmentName}.json", true, true)
+            .AddJsonStream(new MemoryStream(bytes))
             .AddEnvironmentVariables();
 
         Configuration = builder.Build();
@@ -55,8 +59,14 @@ public class Startup
     }
 
     // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-    public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+    public void Configure(IApplicationBuilder app, IWebHostEnvironment env, 
+        IServiceProvider serviceProvider, AuthContext context)
     {
+        if (!env.IsDevelopment())
+        {
+            serviceProvider.MigrateDatabase();
+        }
+
         if (env.IsDevelopment())
         {
             app.UseSwagger();
