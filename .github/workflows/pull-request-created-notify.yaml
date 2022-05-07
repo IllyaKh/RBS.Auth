@@ -1,8 +1,8 @@
-name: CI RBS.Auth on pull request
+name: Notify telegram on pull request created
 
 on:
   pull_request:
-    types: [created]
+    types: [opened, reopened]
     branches:
       - main
       - develop
