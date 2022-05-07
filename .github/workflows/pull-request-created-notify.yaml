@@ -1,0 +1,22 @@
+name: Notify telegram on pull request created
+
+on:
+  pull_request:
+    types: [opened, reopened]
+    branches:
+      - main
+      - develop
+    
+jobs:
+  notifyTelegram:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send build result to Telegram 📫
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_TO }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          message: |
+            ${{ github.actor }} created pull request ${{ github.head_ref }}:
+            
+            Repository: ${{ github.repository }}

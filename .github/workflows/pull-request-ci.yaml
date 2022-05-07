@@ -1,0 +1,30 @@
+name: CI RBS.Auth on pull request
+
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      build_result: ${{ steps.dotnet_build_app.RESULT_BUILD }}
+    steps:
+      - name: Checkout code 💩
+        uses: actions/checkout@v2
+        
+      - name: Setup .NET 6 🔑
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '6.0.x'
+
+      - name: Restore dependencies ⛓️
+        run: dotnet restore RBS.Auth.WebApi
+      
+      - name: Build an application 🚀
+        id: dotnet_build_app
+        run: dotnet build RBS.Auth.WebApi -c Release --no-restore
+
+      - name: Test with the dotnet CLI 🧻
+        run: dotnet test RBS.Auth.WebApi
