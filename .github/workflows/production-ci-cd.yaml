@@ -1,4 +1,4 @@
-name: Continious Integration and Deployment for RBS.Auth
+name: CI/CD RBS.Auth for production
 
 on:
   push:
