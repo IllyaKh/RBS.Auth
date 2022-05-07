@@ -9,7 +9,6 @@ on:
     
 jobs:
   notifyTelegram:
-    needs: build
     runs-on: ubuntu-latest
     steps:
       - name: Send build result to Telegram 📫
