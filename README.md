@@ -1,7 +1,6 @@
 # RBS.Auth
 ## Room Booking Service authorization service.
-![Build status](https://github.com/IllyaKh/RBS.Auth/actions/workflows/default-ci_cd-flow.yaml/badge.svg)
-
+![Build status](https://github.com/IllyaKh/RBS.Auth/actions/workflows/production-ci-cd.yaml/badge.svg)
 RBS.Auth is a part of RBS system, that allows to Sign In/Sign Up users to the system.
 
 
