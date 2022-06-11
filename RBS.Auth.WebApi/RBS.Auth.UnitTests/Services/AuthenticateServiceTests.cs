@@ -165,7 +165,7 @@ public class AuthenticateServiceTests
         var user = await authService.Register(registerModel);
 
         // Assert
-        user.Should().BeFalse();
+        user.Should().BeNull();
 
         await context.DisposeAsync();
     }
@@ -223,8 +223,6 @@ public class AuthenticateServiceTests
         userCredentials?.Details.Email.Should().Be(userEmail);
         userCredentials?.Hash.Should().Be(testHashSalt);
         userCredentials?.Salt.Should().Be(testHashSalt);
-
-        registerResult.Should().BeTrue();
 
         await context.DisposeAsync();
     }

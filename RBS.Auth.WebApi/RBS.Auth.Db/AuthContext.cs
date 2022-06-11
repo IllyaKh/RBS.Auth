@@ -16,6 +16,9 @@ public class AuthContext : DbContext
 
     public DbSet<UserClaim> Claims { get; set; }
 
+    public DbSet<UserVerificationCodes> UserVerificationCodes { get; set; }
+
+
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

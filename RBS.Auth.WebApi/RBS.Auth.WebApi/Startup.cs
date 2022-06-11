@@ -14,7 +14,9 @@ using RBS.Auth.Services.Hashing;
 using RBS.Auth.Services.Interfaces.Authenticate;
 using RBS.Auth.Services.Interfaces.Hashing;
 using RBS.Auth.Services.Interfaces.Tokens;
+using RBS.Auth.Services.Interfaces.Verification;
 using RBS.Auth.Services.Tokens;
+using RBS.Auth.Services.Verification;
 
 namespace RBS.Auth.WebApi;
 
@@ -22,16 +24,20 @@ public class Startup
 {
     public Startup(IConfiguration configuration, IWebHostEnvironment env)
     {
-        var bytes = Convert.FromBase64String(System.Environment.GetEnvironmentVariable("AppSettings"));
+        Environment = env;
 
         var builder = new ConfigurationBuilder()
             .SetBasePath(env.ContentRootPath)
             .AddJsonFile("appsettings.json", false, true)
-            .AddJsonStream(new MemoryStream(bytes))
             .AddEnvironmentVariables();
+        
+        if (Environment.IsProduction())
+        {
+            var bytes = Convert.FromBase64String(System.Environment.GetEnvironmentVariable("AppSettings"));
+            builder.AddJsonStream(new MemoryStream(bytes));
+        }
 
         Configuration = builder.Build();
-        Environment = env;
     }
 
     public IConfiguration Configuration { get; }
@@ -50,6 +56,8 @@ public class Startup
             fv.RegisterValidatorsFromAssemblyContaining<Startup>());
 
         services.Configure<AuthOptions>(Configuration.GetSection("Auth"));
+        services.Configure<ServicesOptions>(Configuration.GetSection("Services"));
+
 
         if (!Environment.IsProduction())
             services.AddSwaggerGen(options =>
@@ -93,5 +101,6 @@ public class Startup
         services.AddScoped<IJwtTokenService, JwtTokenService>();
         services.AddScoped<IAuthenticateService, AuthenticateService>();
         services.AddScoped<IHashingService, HashingService>();
+        services.AddScoped<IVerificationService, VerificationService>();
     }
 }

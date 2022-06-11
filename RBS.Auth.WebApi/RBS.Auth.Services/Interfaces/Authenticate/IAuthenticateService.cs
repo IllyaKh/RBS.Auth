@@ -8,5 +8,5 @@ public interface IAuthenticateService
 {
     Task<UserCredential> Authenticate(string email, string password);
 
-    Task<bool> Register(RegisterModel model);
+    Task<UserCredential> Register(RegisterModel model);
 }
