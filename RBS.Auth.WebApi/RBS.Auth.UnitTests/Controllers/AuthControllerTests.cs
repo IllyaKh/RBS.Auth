@@ -15,6 +15,7 @@ using RBS.Auth.Db.Domain;
 using RBS.Auth.Services.Hashing.Options;
 using RBS.Auth.Services.Interfaces.Authenticate;
 using RBS.Auth.Services.Interfaces.Tokens;
+using RBS.Auth.Services.Interfaces.Verification;
 using RBS.Auth.UnitTests.TestExtensions;
 using RBS.Auth.WebApi.Controllers;
 using RBS.Auth.WebApi.Models;
@@ -25,6 +26,8 @@ public class AuthControllerTests
 {
     private Mock<IAuthenticateService> _authenticateServiceMock;
     private Mock<IJwtTokenService> _tokenServiceMock;
+    private Mock<IVerificationService> _verificationServiceMock;
+
     private IOptions<AuthOptions> _options;
     private Mock<IObjectModelValidator> _objectValidator;
 
@@ -34,6 +37,7 @@ public class AuthControllerTests
         _authenticateServiceMock = new Mock<IAuthenticateService>();
         _tokenServiceMock = new Mock<IJwtTokenService>();
         _objectValidator = new Mock<IObjectModelValidator>();
+        _verificationServiceMock = new Mock<IVerificationService>();
         _options = Options.Create(new AuthOptions());
 
         _objectValidator.Setup(ObjectValidatorExtensions.GetValidatorExpression());
@@ -56,12 +60,13 @@ public class AuthControllerTests
             .Returns(Task.FromResult(new UserCredential()));
 
         _tokenServiceMock
-            .Setup(t => t.Generate(It.IsAny<AuthOptions>(), It.IsAny<UserCredential>()))
+            .Setup(t => t.Generate(It.IsAny<UserCredential>()))
             .Returns(token);
 
         var controller = new AuthController(_options,
             _tokenServiceMock.Object,
             _authenticateServiceMock.Object,
+            _verificationServiceMock.Object,
             MapperExtensions.Mapper);
 
         // Act
@@ -93,6 +98,7 @@ public class AuthControllerTests
         var controller = new AuthController(_options,
             _tokenServiceMock.Object,
             _authenticateServiceMock.Object,
+            _verificationServiceMock.Object,
             MapperExtensions.Mapper);
 
         // Act
@@ -114,11 +120,8 @@ public class AuthControllerTests
         var controller = new AuthController(_options,
             _tokenServiceMock.Object,
             _authenticateServiceMock.Object,
+            _verificationServiceMock.Object,
             MapperExtensions.Mapper);
-
-        _authenticateServiceMock
-            .Setup(t => t.Register(It.IsAny<RegisterModel>()))
-            .Returns(Task.FromResult(false));
 
         // Act
         var response = await controller.Register(registerRequest);
@@ -139,15 +142,16 @@ public class AuthControllerTests
         var controller = new AuthController(_options,
             _tokenServiceMock.Object,
             _authenticateServiceMock.Object,
+            _verificationServiceMock.Object,
             MapperExtensions.Mapper);
 
         _authenticateServiceMock
             .Setup(t => t.Register(It.IsAny<RegisterModel>()))
-            .Returns(Task.FromResult(true));
+            .Returns(Task.FromResult(new UserCredential()));
 
         // Act
         var response = await controller.Register(registerRequest);
-        var okResult = response as StatusCodeResult;
+        var okResult = response as OkObjectResult;
 
         // Assert
         okResult.Should().NotBeNull();

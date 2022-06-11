@@ -6,6 +6,7 @@ using RBS.Auth.Common;
 using RBS.Auth.Common.Models;
 using RBS.Auth.Services.Interfaces.Authenticate;
 using RBS.Auth.Services.Interfaces.Tokens;
+using RBS.Auth.Services.Interfaces.Verification;
 using RBS.Auth.WebApi.Models;
 
 namespace RBS.Auth.WebApi.Controllers;
@@ -15,18 +16,19 @@ namespace RBS.Auth.WebApi.Controllers;
 public class AuthController : ControllerBase
 {
     private readonly IAuthenticateService _authenticateService;
-    private readonly IOptions<AuthOptions> _authOptions;
     private readonly IJwtTokenService _jwtTokenService;
+    private readonly IVerificationService _verificationService;
     private readonly IMapper _mapper;
 
     public AuthController(IOptions<AuthOptions> authOptions,
         IJwtTokenService jwtTokenService,
         IAuthenticateService authenticateService,
+        IVerificationService verificationService,
         IMapper mapper)
     {
-        _authOptions = authOptions;
         _jwtTokenService = jwtTokenService;
         _authenticateService = authenticateService;
+        _verificationService = verificationService;
         _mapper = mapper;
     }
 
@@ -41,11 +43,11 @@ public class AuthController : ControllerBase
         if (user == null)
             return Unauthorized();
 
-        var token = _jwtTokenService.Generate(_authOptions.Value, user);
+        var token = _jwtTokenService.Generate(user);
 
         return string.IsNullOrEmpty(token) ? 
             StatusCode(500) : 
-            Ok(new { access_token = token });
+            Ok(new { access_token = token, is_verified = user.IsVerified });
 
     }
 
@@ -57,9 +59,33 @@ public class AuthController : ControllerBase
 
         var registerModel = _mapper.Map<RegisterModel>(request);
 
-        if (await _authenticateService.Register(registerModel)) 
-            return Ok();
+        var user = await _authenticateService.Register(registerModel);
+        
+        if (user != null)
+        {
+            var code = await _verificationService.GenerateCode(user.Id);
+
+            await _verificationService.SendVerifyCode(request.Email, code);
+
+            return Ok(new { user_id = user.Id });
+        }
 
         return StatusCode(500);
+    }
+
+    [HttpGet]
+    public IActionResult IsLogedIn(string token)
+    {
+        var isValid = _jwtTokenService.ValidateToken(token);
+
+        return isValid ? Ok() : Unauthorized();
+    }
+
+    [HttpGet]
+    public IActionResult GetClaims(string token)
+    {
+        var claims = _jwtTokenService.GetClaims(token);
+
+        return Ok(claims);
     }
 }

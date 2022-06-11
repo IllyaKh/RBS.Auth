@@ -34,6 +34,7 @@ public class AuthenticateService : IAuthenticateService
         {
             var user = await _db.UserCredentials
                 .Include(det => det.Details)
+                .Include(cl => cl.Claims)
                 .SingleOrDefaultAsync(d => d.Details.Email == email);
 
             if (user != null)
@@ -50,7 +51,7 @@ public class AuthenticateService : IAuthenticateService
         }
     }
 
-    public async Task<bool> Register(RegisterModel model)
+    public async Task<UserCredential> Register(RegisterModel model)
     {
         try
         {
@@ -58,12 +59,12 @@ public class AuthenticateService : IAuthenticateService
 
             await _db.AddAsync(authUser);
 
-            return true;
+            return authUser;
         }
         catch (Exception ex)
         {
             _logger.LogError($"An error occurred when register user: {model.Email}", ex);
-            return false;
+            return null;
         }
         finally
         {
@@ -86,8 +87,8 @@ public class AuthenticateService : IAuthenticateService
         {
             new()
             {
-                Role = RoleClaim.Admin,
-                Name = "full-access"
+                Role = RoleClaim.User,
+                Name = "none"
             }
         };
 

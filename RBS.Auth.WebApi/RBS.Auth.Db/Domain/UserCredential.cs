@@ -14,4 +14,6 @@ public class UserCredential
     public UserDetails Details { get; set; }
 
     public IList<UserClaim> Claims { get; set; }
+
+    public bool IsVerified { get; set; }
 }

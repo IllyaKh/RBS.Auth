@@ -13,11 +13,13 @@ public class Program
 
     public static IHostBuilder CreateHostBuilder(string[] args)
     {
+        var port = Environment.GetEnvironmentVariable("PORT") ?? "2001";
+
         return Host.CreateDefaultBuilder(args)
             .ConfigureWebHostDefaults(webBuilder =>
             {
                 webBuilder.UseStartup<Startup>();
-                webBuilder.UseUrls("http://*:" + Environment.GetEnvironmentVariable("PORT"));
+                webBuilder.UseUrls("http://*:" + port);
             });
     }
 }

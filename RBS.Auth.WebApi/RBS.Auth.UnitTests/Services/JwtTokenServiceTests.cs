@@ -26,6 +26,7 @@ public class JwtTokenServiceTests
             TokenLifetime = 1000
         };
 
+
         _credentials = new UserCredential()
         {
             Id = Guid.NewGuid(),
@@ -40,10 +41,10 @@ public class JwtTokenServiceTests
     public void Generate_CredentialsIsValid_ShouldReturnHash()
     {
         // Arrange
-        var jwtTokenService = new JwtTokenService();
+        var jwtTokenService = new JwtTokenService(Options.Create(_authOptions));
 
         // Act 
-        var result = jwtTokenService.Generate(_authOptions, _credentials);
+        var result = jwtTokenService.Generate(_credentials);
 
         // Assert
         result.Should().NotBeNullOrEmpty();
