@@ -151,7 +151,7 @@ public class AuthControllerTests
 
         // Act
         var response = await controller.Register(registerRequest);
-        var okResult = response as StatusCodeResult;
+        var okResult = response as OkObjectResult;
 
         // Assert
         okResult.Should().NotBeNull();
